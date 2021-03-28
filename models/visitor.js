@@ -1,8 +1,9 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const visitorSchema = mongoose.Schema({
-    regDt: Date
+const VisitorSchema = new mongoose.Schema({
+  date: String,
+  count: Number,
 });
 
-const Visitor = mongoose.model('Visitor', visitorSchema);
-module.exports = { Visitor };
+const model = mongoose.model("Visitor", VisitorSchema);
+export default model;
