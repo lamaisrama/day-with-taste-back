@@ -8,5 +8,6 @@ const globalRouter = express.Router();
 globalRouter.get(routes.home, home);
 globalRouter.get(routes.result, result);
 globalRouter.get(routes.visit, UserController.visitHome);
+globalRouter.post(routes.submit, UserController.submitAnswer);
 
 export default globalRouter;
