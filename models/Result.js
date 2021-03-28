@@ -6,12 +6,5 @@ const resultSchema = new mongoose.Schema({
   created: Date,
 });
 
-resultSchema.pre("save", next => {
-  const currDate = new Date();
-  this.created = currDate;
-  next();
-});
-
-const model = new mongoose.Schema("Result", resultSchema);
-
+const model = mongoose.model("Result", resultSchema);
 export default model;

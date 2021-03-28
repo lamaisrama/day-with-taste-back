@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 
 const VisitorSchema = new mongoose.Schema({
-  date: Date,
+  date: String,
   count: Number,
 });
 
-const model = mongoose.model("Vistor", VisitorSchema);
+const model = mongoose.model("Visitor", VisitorSchema);
 export default model;
