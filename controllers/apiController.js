@@ -1,10 +1,9 @@
 import Visitor from "../models/Visitor";
 import Result from "../models/Result";
-import { json } from "body-parser";
 
 export const updateVisitorCount = async (req, res) => {
   let today = getYearMonthDate();
-  await Visitor.findOneAndUpdate(
+  Visitor.findOneAndUpdate(
     { date: today },
     { $inc: { count: 1 } },
     { new: true, upsert: true },
