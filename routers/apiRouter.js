@@ -13,5 +13,5 @@ apiRouter.get("/", (req, res) => {
 });
 apiRouter.get("/updateVisitorCount", updateVisitorCount);
 apiRouter.post("/youtube", searchMusic);
-apiRouter.post("/result", saveResult, findRandomMusic);
+apiRouter.post("/result", saveResult);
 export default apiRouter;

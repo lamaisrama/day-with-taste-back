@@ -3,6 +3,8 @@ import Result from "../models/Result";
 import { json } from "body-parser";
 import Youtube from "youtube-node";
 import dotenv from "dotenv";
+import { permutation } from "../util/permutate";
+import { makeOverlabPermutation } from "../util/makeOverlapCombination";
 
 dotenv.config();
 
@@ -70,17 +72,31 @@ export const saveResult = async (req, res, next) => {
   const {
     body: { music, result },
   } = req;
-  await new Result({ music, result }).save((err, result) => {
-    if (err) {
-      console.log(err);
-    }
-    console.log(`Submit Success : ${result}`);
-  });
-  next();
+  var arr = result.split('');
+  //permutation(arr, 0, arr.length, 3);
+  var temp = [];
+  makeOverlabPermutation(4, temp, 0, 0);
+
+  // new Result({ music, result }).save((err, result) => {
+  //   if (err) {
+  //     console.log(err);
+  //   }
+  //   console.log(`Submit Success : ${result}`);
+
+  // });
+  return res.status(200).json({success:true});
+  //next();
 };
 
-export const findRandomMusic = (req, res) => {
+const findRandomMusic = (answer) => {
   let result = req.body.result;
+  var arr = [];
+  const query = {result: {$in:arr}};
+  const cursor = Result.find(query);
+
+  // if((await cursor.count()) === 0) {
+  //   // 일치하는 것이 없다.
+  // }
   res.send(`[What to do next week]`);
 };
 
