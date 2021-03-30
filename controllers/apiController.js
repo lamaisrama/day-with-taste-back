@@ -3,8 +3,6 @@ import Result from "../models/Result";
 import { json } from "body-parser";
 import Youtube from "youtube-node";
 import dotenv from "dotenv";
-import { permutation } from "../util/permutate";
-import { makeOverlabPermutation } from "../util/makeOverlapCombination";
 
 dotenv.config();
 
@@ -28,8 +26,6 @@ export const updateVisitorCount = async (req, res) => {
 };
 
 export const searchMusic = async (req, res, next) => {
-  // x-www-form-urlencoded 만 가능
-  // TODO : HTTP 지정해서 json으로 전송 받을 것
   var pageToken = req.body.pageToken;
   youtube.addParam('order', 'relevance'); // 관련성 순서
   youtube.addParam('type', 'video'); // 타입 지정 
@@ -72,32 +68,54 @@ export const saveResult = async (req, res, next) => {
   const {
     body: { music, result },
   } = req;
-  var arr = result.split('');
-  //permutation(arr, 0, arr.length, 3);
-  var temp = [];
-  makeOverlabPermutation(4, temp, 0, 0);
-
-  // new Result({ music, result }).save((err, result) => {
-  //   if (err) {
-  //     console.log(err);
-  //   }
-  //   console.log(`Submit Success : ${result}`);
-
-  // });
-  return res.status(200).json({success:true});
-  //next();
+  var regDt = new Date();
+  new Result({ music, result, regDt }).save((err, result) => {
+    if (err) {
+      console.log(err);
+    }
+    console.log(`Submit Success : ${result}`);
+  });
+  next();
 };
 
-const findRandomMusic = (answer) => {
+export const findRandomMusic = async (req, res, next) => {
   let result = req.body.result;
-  var arr = [];
-  const query = {result: {$in:arr}};
-  const cursor = Result.find(query);
+  let music = req.body.music;
+  
+  // 모두 일치하는 경우
+  var docList = await Result.find(
+    { $and: [{ result: result }
+            ,{ music:{$ne : music} }]
+    });
+  if(docList.length>0) {
+    var randomMusic = getRandomMusic(docList);
+    return res.status(200).json({result, randomMusic});
+  }
 
-  // if((await cursor.count()) === 0) {
-  //   // 일치하는 것이 없다.
-  // }
-  res.send(`[What to do next week]`);
+  // 1개 다른 경우
+  for(var i=0; i<result.length; i++) {
+    var temp = result.split("");
+    temp[i] = temp[i]==0?1:0;
+    var simliarResult = temp.join('');
+
+    docList = await Result.find(
+      { $and : [{ result: simliarResult }
+               ,{ music:{$ne : music} }]
+      });
+    if(docList.length>0) {
+      var randomMusic = getRandomMusic(docList);
+      return res.status(200).json({result, randomMusic});
+    }
+  }
+
+  // 무작위 추출
+  docList = await Result.aggregate(
+      [{ $match: {music:{$ne: music}} }]
+      ,[{ $sample:{size:1} }]
+    );
+  var randomMusic = getRandomMusic(docList);
+  return res.status(200).json({result, randomMusic});
+  
 };
 
 const getYearMonthDate = () => {
@@ -112,3 +130,13 @@ const getYearMonthDate = () => {
   console.log(today);
   return today;
 };
+
+
+const getRandomArbitrary = (max) => {
+  return Math.floor(Math.random() * max);
+}
+
+const getRandomMusic = (docList) => {
+  var randomIndex = getRandomArbitrary(0, docList.length);
+  return docList[randomIndex].music;
+}
