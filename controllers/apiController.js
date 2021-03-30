@@ -83,9 +83,81 @@ export const saveResult = async (req, res, next) => {
   next();
 };
 
-export const findRandomMusic = (req, res) => {
+export const findRandomMusic = async(req, res) => {
   let result = req.body.result;
-  res.send(`[What to do next week]`);
+  resultArray = result.split("");
+  let searchedResultArray;                        // 해당 결과와 동일한 결과를 가진 결과 도큐먼트의 Array
+  let resultToSend = {result, randomMusic: null}  // response로 보내 줄 객체
+
+  try{
+    // 전체 일치 하는 경우 
+    searchedResultedArray = await Result.find({result});
+    if (searchedResultedArray.length>0 ) {
+      resultToSend.randomMusic = getRandomMusicFromResults(searchedResultArray);
+      break;
+    }
+    // 하나 다를 경우 (90.90%)
+    let randomIndexArray = getDifferentOneIndexArray();
+    let flag=true;
+    for (let i=0; i<randomIndexArray.length; i++) {
+      // 만약 한번이라도 동일한 결과 값을 가진 document를 찾았다면 for문 끝
+      if (!flag) break;
+      
+      //해당 인덱스 수정
+      resultArray[randomIndexArray[i]] = resultArray[randomIndexArray[i]]=== 0 ? 1 : 0 ;
+      let resultString = resultArray.toString();   // [Todo1] : 이렇게 하면 "1,2,3,4,5" 의 형태로 Stringify => "12345"로 수정해야 함
+      
+      searchedResultedArray = await Result.find({result: resultString});
+      // 결과값 찾으면 전송할 데이터의 randomMusic에 해당 값을 넣는다.
+      if (searchedResultedArray.length>0 ) {      
+        resultToSend.randomMusic = getRandomMusicFromResults(searchedResultArray);
+        flag = false;
+      }
+
+    }
+
+    // 두개 다를 경우 (81.81%)
+    randomIndexArray = getDifferentTwoIndexArray();
+    for (let i=0; i<randomIndexArray.length; i++) {
+      if (!flag) break;
+
+      let indexToFix = randomIndexArray[i];   // [m, n];
+      resultArray[indexToFix[0]] = resultArray[indexToFix[0]]=== 0 ? 1 : 0 ;
+      resultArray[indexToFix[1]] = resultArray[indexToFix[1]]=== 0 ? 1 : 0 ;
+
+      let resultString = resultArray.toString();
+      searchedResultedArray = await Result.find({result: resultString});
+
+      if (searchedResultedArray.length>0 ) {
+        resultToSend.randomMusic = getRandomMusicFromResults(searchedResultArray);
+        flag = false;
+      }
+    }
+    // 세개 다를 경우 (72.72%)
+    randomIndexArray = getDifferentThreeIndexArray();
+    for (let i=0; i<randomIndexArray.length; i++) {
+      if (!flag) break;
+
+      let indexToFix = randomIndexArray[i];   // [m, n, o];
+      resultArray[indexToFix[0]] = resultArray[indexToFix[0]]=== 0 ? 1 : 0 ;
+      resultArray[indexToFix[1]] = resultArray[indexToFix[1]]=== 0 ? 1 : 0 ;
+      resultArray[indexToFix[2]] = resultArray[indexToFix[2]]=== 0 ? 1 : 0 ;
+
+      let resultString = resultArray.toString();
+      searchedResultedArray = await Result.find({result: resultString});
+
+      if (searchedResultedArray.length>0 ) {
+        resultToSend.randomMusic = getRandomMusicFromResults(searchedResultArray);
+        flag = false;        
+      }
+    }
+    // [TODOS] : IF NOT? 
+    
+  }catch(err) {
+    console.log(err);
+    return res.status(500).json(err);
+  }
+  res.status(200).json(resultToSend);
 };
 
 const getYearMonthDate = () => {
@@ -100,3 +172,52 @@ const getYearMonthDate = () => {
   console.log(today);
   return today;
 };
+
+
+const shuffle = (array) => {
+  var j, x, i; 
+  for (i = array.length; i; i -= 1) { 
+    j = Math.floor(Math.random() * i);
+    x = array[i - 1]; 
+    array[i - 1] = array[j]; 
+    array[j] = x; 
+  }
+}
+
+const getRandomMusicFromResults = (array) => {
+  shuffle(array);
+  return array[0].music;
+}
+
+const getDifferentOneIndexArray = () => {
+  let arr = [];
+  for (let i =0; i < 11 ; i++ ) {
+    arr.push(i);
+  }
+  shuffle(arr);
+  return arr;
+}
+
+const getDifferentTwoIndexArray = () => {
+  let arr = [];
+  for (let i =0; i < 11 ; i ++)  {
+    for (let j=i+1 ; j<11 ; j++) {
+      arr.push([i, j]);
+    }
+  }
+  shuffle(arr);
+  return arr;
+}
+
+const getDifferentThreeIndexArray = () => {
+  let arr = [];
+  for (let i=0; i< 11; i++) {
+    for (let j=i+1; j<11; j++) {
+      for (let k=j+1; k<11; k++) {
+        arr.push([i,j,k]);
+      }
+    }
+  }
+  shuffle(arr);
+  return arr
+}
