@@ -207,7 +207,7 @@ const shuffle = array => {
 const getRandomMusicFromResults = array => {
   let length = array.length;
   let randomIndex = Math.floor(Math.random() * length);
-  return array[randomIndex].music;
+  return array && array[randomIndex] && array[randomIndex].music;
 };
 
 const getDifferentOneIndexArray = () => {
