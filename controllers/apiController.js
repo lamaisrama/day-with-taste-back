@@ -70,22 +70,115 @@ export const searchMusic = async (req, res, next) => {
   });
 };
 
-export const saveResult = async (req, res, next) => {
+export const saveResult = (req, res) => {
   const {
-    body: { music, result },
+    body: { music, result, randomMusic },
   } = req;
-  await new Result({ music, result }).save((err, result) => {
+
+  new Result({ music, result }).save((err, result) => {
     if (err) {
-      console.log(err);
+      res.status(500).json(err);
     }
     console.log(`Submit Success : ${result}`);
   });
-  next();
+  res.status(200).json({ result, randomMusic });
 };
 
-export const findRandomMusic = (req, res) => {
-  let result = req.body.result;
-  res.send(`[What to do next week]`);
+export const findRandomMusic = async (req, res, next) => {
+  const {
+    body: { result },
+  } = req;
+  let resultArrayOrigin = result.split("");
+  let resultArray;
+  let searchedResultArray; // 해당 결과와 동일한 결과를 가진 결과 도큐먼트의 Array
+  let randomMusic;
+
+  try {
+    // 전체 일치 하는 경우
+    searchedResultArray = await Result.find({ result });
+    if (searchedResultArray.length > 0) {
+      randomMusic = getRandomMusicFromResults(searchedResultArray);
+      req.body.randomMusic = randomMusic;
+      next();
+      return;
+    }
+    // 하나 다를 경우 (90.90%)
+
+    let randomIndexArray = getDifferentOneIndexArray();
+    for (let i = 0; i < randomIndexArray.length; i++) {
+      //해당 인덱스 수정
+      resultArray = resultArrayOrigin.slice();
+      resultArray[randomIndexArray[i]] =
+        resultArray[randomIndexArray[i]] == 0 ? 1 : 0;
+      let resultString = resultArray.join("");
+      searchedResultArray = await Result.find({ result: resultString });
+      // 결과값 찾으면 전송할 데이터의 randomMusic에 해당 값을 넣는다.
+      if (searchedResultArray.length > 0) {
+        randomMusic = getRandomMusicFromResults(searchedResultArray);
+        console.log("결과값 하나 다른 경우 find");
+        console.log("원본\t:" + resultArrayOrigin.join(""));
+        console.log("비교\t:" + resultArray.join(""));
+        req.body.randomMusic = randomMusic;
+        next();
+        return;
+      }
+    }
+
+    // 두개 다를 경우 (81.81%)
+
+    randomIndexArray = getDifferentTwoIndexArray();
+    for (let i = 0; i < randomIndexArray.length; i++) {
+      resultArray = resultArrayOrigin.slice();
+      let indexToFix = randomIndexArray[i]; // [m, n];
+      resultArray[indexToFix[0]] = resultArray[indexToFix[0]] == 0 ? 1 : 0;
+      resultArray[indexToFix[1]] = resultArray[indexToFix[1]] == 0 ? 1 : 0;
+      let resultString = resultArray.join("");
+      searchedResultArray = await Result.find({ result: resultString });
+      if (searchedResultArray.length > 0) {
+        randomMusic = getRandomMusicFromResults(searchedResultArray);
+        req.body.randomMusic = randomMusic;
+        console.log("결과값 두개 다른 경우 find");
+        console.log("원본\t:" + resultArrayOrigin.join(""));
+        console.log("비교\t:" + resultArray.join(""));
+        next();
+        return;
+      }
+    }
+
+    // 세개 다를 경우 (72.72%)
+    randomIndexArray = getDifferentThreeIndexArray();
+    for (let i = 0; i < randomIndexArray.length; i++) {
+      resultArray = resultArrayOrigin.slice();
+      let indexToFix = randomIndexArray[i]; // [m, n, o];
+      resultArray[indexToFix[0]] = resultArray[indexToFix[0]] == 0 ? 1 : 0;
+      resultArray[indexToFix[1]] = resultArray[indexToFix[1]] == 0 ? 1 : 0;
+      resultArray[indexToFix[2]] = resultArray[indexToFix[2]] == 0 ? 1 : 0;
+
+      let resultString = resultArray.join("");
+      searchedResultArray = await Result.find({ result: resultString });
+
+      if (searchedResultArray.length > 0) {
+        randomMusic = getRandomMusicFromResults(searchedResultArray);
+        req.body.randomMusic = randomMusic;
+        console.log("결과값 세개 다른 경우 find");
+        console.log("원본\t:" + resultArrayOrigin.join(""));
+        console.log("비교\t:" + resultArray.join(""));
+        next();
+        return;
+      }
+    }
+
+    //IF NOT?
+    console.log("72% 이상 일치 하는 결과 없음 - Random Music");
+    searchedResultArray = await Result.find({});
+    randomMusic = getRandomMusicFromResults(searchedResultArray);
+    req.body.randomMusic = randomMusic;
+    next();
+    return;
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json(err);
+  }
 };
 
 const getYearMonthDate = () => {
@@ -99,4 +192,53 @@ const getYearMonthDate = () => {
   today = "" + year + month + date;
   console.log(today);
   return today;
+};
+
+const shuffle = array => {
+  var j, x, i;
+  for (i = array.length; i; i -= 1) {
+    j = Math.floor(Math.random() * i);
+    x = array[i - 1];
+    array[i - 1] = array[j];
+    array[j] = x;
+  }
+};
+
+const getRandomMusicFromResults = array => {
+  let length = array.length;
+  let randomIndex = Math.floor(Math.random() * length);
+  return array && array[randomIndex] && array[randomIndex].music;
+};
+
+const getDifferentOneIndexArray = () => {
+  let arr = [];
+  for (let i = 0; i < 11; i++) {
+    arr.push(i);
+  }
+  shuffle(arr);
+  return arr;
+};
+
+const getDifferentTwoIndexArray = () => {
+  let arr = [];
+  for (let i = 0; i < 11; i++) {
+    for (let j = i + 1; j < 11; j++) {
+      arr.push([i, j]);
+    }
+  }
+  shuffle(arr);
+  return arr;
+};
+
+const getDifferentThreeIndexArray = () => {
+  let arr = [];
+  for (let i = 0; i < 11; i++) {
+    for (let j = i + 1; j < 11; j++) {
+      for (let k = j + 1; k < 11; k++) {
+        arr.push([i, j, k]);
+      }
+    }
+  }
+  shuffle(arr);
+  return arr;
 };
