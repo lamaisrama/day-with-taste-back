@@ -25,8 +25,6 @@ export const updateVisitorCount = async (req, res) => {
 };
 
 export const searchMusic = async (req, res, next) => {
-  // x-www-form-urlencoded 만 가능
-  // TODO : HTTP 지정해서 json으로 전송 받을 것
   var pageToken = req.body.pageToken;
   youtube.addParam("order", "relevance"); // 관련성 순서
   youtube.addParam("type", "video"); // 타입 지정

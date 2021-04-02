@@ -8,10 +8,8 @@ import {
 
 const apiRouter = express.Router();
 
-apiRouter.get("/", (req, res) => {
-  res.send("hi");
-});
-apiRouter.get("/updateVisitorCount", updateVisitorCount);
+apiRouter.get("/visit", updateVisitorCount);
 apiRouter.post("/youtube", searchMusic);
 apiRouter.post("/result", findRandomMusic, saveResult);
+
 export default apiRouter;
