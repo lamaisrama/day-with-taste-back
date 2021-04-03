@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import app from "./app";
 import cors from "cors";
+import db from "./db";
 
 dotenv.config();
 
