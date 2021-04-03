@@ -9,7 +9,7 @@ import {
 const apiRouter = express.Router();
 
 apiRouter.get("/visit", updateVisitorCount);
-apiRouter.post("/youtube", searchMusic);
+apiRouter.get("/youtube", searchMusic);
 apiRouter.post("/result", findRandomMusic, saveResult);
 
 export default apiRouter;

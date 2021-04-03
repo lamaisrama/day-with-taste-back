@@ -25,7 +25,7 @@ export const updateVisitorCount = async (req, res) => {
 };
 
 export const searchMusic = async (req, res, next) => {
-  var pageToken = req.body.pageToken;
+  var pageToken = req.param('pageToken');
   youtube.addParam("order", "relevance"); // 관련성 순서
   youtube.addParam("type", "video"); // 타입 지정
   youtube.addParam("part", "snippet");
@@ -33,7 +33,7 @@ export const searchMusic = async (req, res, next) => {
   youtube.addParam("safeSearch", "moderate");
   youtube.addParam("pageToken", pageToken);
   var limit = 5;
-  var word = req.body.keyword;
+  var word = req.param('keyword');
 
   console.log("검색어 : " + word);
   console.log("=======================================");
