@@ -1,6 +1,5 @@
 import Visitor from "../models/Visitor";
 import Result from "../models/Result";
-import { json } from "body-parser";
 import Youtube from "youtube-node";
 import dotenv from "dotenv";
 
@@ -11,7 +10,7 @@ youtube.setKey(process.env.YOUTUBE_KEY);
 
 export const updateVisitorCount = async (req, res) => {
   let today = getYearMonthDate();
-  await Visitor.findOneAndUpdate(
+  Visitor.findOneAndUpdate(
     { date: today },
     { $inc: { count: 1 } },
     { new: true, upsert: true },
@@ -27,95 +26,157 @@ export const updateVisitorCount = async (req, res) => {
 
 export const searchMusic = async (req, res, next) => {
   var pageToken = req.body.pageToken;
-  youtube.addParam('order', 'relevance'); // 관련성 순서
-  youtube.addParam('type', 'video'); // 타입 지정 
-  youtube.addParam('part', 'snippet');
-  youtube.addParam('regionCode', 'KR');
-  youtube.addParam('safeSearch', 'moderate');
-  youtube.addParam('pageToken', pageToken);
+  youtube.addParam("order", "relevance"); // 관련성 순서
+  youtube.addParam("type", "video"); // 타입 지정
+  youtube.addParam("part", "snippet");
+  youtube.addParam("regionCode", "KR");
+  youtube.addParam("safeSearch", "moderate");
+  youtube.addParam("pageToken", pageToken);
   var limit = 5;
   var word = req.body.keyword;
 
-  console.log('검색어 : '+word);
-  console.log('=======================================')
-  youtube.search(word, limit, function (err, result) { // 검색 실행 
-      if (err) { 
-          console.log(err); 
-          return res.status(500).json(err); 
-      } // 에러일 경우 에러공지하고 빠져나감 
-      var nextPageToken = result.nextPageToken;
-      var prevPageToken = result.prevPageToken;
-      var items = result["items"]; // 결과 중 items 항목만 가져옴 
-      var list = [];
-      for (var i in items) { 
-          var it = items[i]; 
-          var title = it["snippet"]["title"]; 
-          var video_id = it["id"]["videoId"]; 
-          var url = "https://www.youtube.com/watch?v=" + video_id; 
-          var thumbnails = it["snippet"]["thumbnails"];
-          list.push({title: title, video_id: video_id, url: url, thumbnails: thumbnails});
-          console.log("제목 : " + title); 
-          console.log("URL : " + url); 
-          console.log("-----------"); 
-      }
-      var info = {item:list, nextPage:nextPageToken, prevPage:prevPageToken};
-      return res.status(200).json(info);
-  });
-}
-
-
-export const saveResult = async (req, res, next) => {
-  const {
-    body: { music, result },
-  } = req;
-  var regDt = new Date();
-  new Result({ music, result, regDt }).save((err, result) => {
+  console.log("검색어 : " + word);
+  console.log("=======================================");
+  youtube.search(word, limit, function (err, result) {
+    // 검색 실행
     if (err) {
       console.log(err);
+      return res.status(500).json(err);
+    } // 에러일 경우 에러공지하고 빠져나감
+    var nextPageToken = result.nextPageToken;
+    var prevPageToken = result.prevPageToken;
+    var items = result["items"]; // 결과 중 items 항목만 가져옴
+    var list = [];
+    for (var i in items) {
+      var it = items[i];
+      var title = it["snippet"]["title"];
+      var video_id = it["id"]["videoId"];
+      var url = "https://www.youtube.com/watch?v=" + video_id;
+      var thumbnails = it["snippet"]["thumbnails"];
+      list.push({
+        title: title,
+        video_id: video_id,
+        url: url,
+        thumbnails: thumbnails,
+      });
+      console.log("제목 : " + title);
+      console.log("URL : " + url);
+      console.log("-----------");
+    }
+    var info = { item: list, nextPage: nextPageToken, prevPage: prevPageToken };
+    return res.status(200).json(info);
+  });
+};
+
+export const saveResult = (req, res) => {
+  const {
+    body: { music, result, randomMusic },
+  } = req;
+
+  new Result({ music, result }).save((err, result) => {
+    if (err) {
+      res.status(500).json(err);
     }
     console.log(`Submit Success : ${result}`);
   });
-  next();
+  res.status(200).json({ result, randomMusic });
 };
 
 export const findRandomMusic = async (req, res, next) => {
-  let result = req.body.result;
-  let music = req.body.music;
-  
-  // 모두 일치하는 경우
-  var docList = await Result.find(
-    { $and: [{ result: result }
-            ,{ music:{$ne : music} }]
-    });
-  if(docList.length>0) {
-    var randomMusic = getRandomMusic(docList);
-    return res.status(200).json({result, randomMusic});
-  }
+  const {
+    body: { result },
+  } = req;
+  let resultArrayOrigin = result.split("");
+  let resultArray;
+  let searchedResultArray; // 해당 결과와 동일한 결과를 가진 결과 도큐먼트의 Array
+  let randomMusic;
 
-  // 1개 다른 경우
-  for(var i=0; i<result.length; i++) {
-    var temp = result.split("");
-    temp[i] = temp[i]==0?1:0;
-    var simliarResult = temp.join('');
-
-    docList = await Result.find(
-      { $and : [{ result: simliarResult }
-               ,{ music:{$ne : music} }]
-      });
-    if(docList.length>0) {
-      var randomMusic = getRandomMusic(docList);
-      return res.status(200).json({result, randomMusic});
+  try {
+    // 전체 일치 하는 경우
+    searchedResultArray = await Result.find({ result });
+    if (searchedResultArray.length > 0) {
+      randomMusic = getRandomMusicFromResults(searchedResultArray);
+      req.body.randomMusic = randomMusic;
+      next();
+      return;
     }
-  }
+    // 하나 다를 경우 (90.90%)
 
-  // 무작위 추출
-  docList = await Result.aggregate(
-      [{ $match: {music:{$ne: music}} }]
-      ,[{ $sample:{size:1} }]
-    );
-  var randomMusic = getRandomMusic(docList);
-  return res.status(200).json({result, randomMusic});
-  
+    let randomIndexArray = getDifferentOneIndexArray();
+    for (let i = 0; i < randomIndexArray.length; i++) {
+      //해당 인덱스 수정
+      resultArray = resultArrayOrigin.slice();
+      resultArray[randomIndexArray[i]] =
+        resultArray[randomIndexArray[i]] == 0 ? 1 : 0;
+      let resultString = resultArray.join("");
+      searchedResultArray = await Result.find({ result: resultString });
+      // 결과값 찾으면 전송할 데이터의 randomMusic에 해당 값을 넣는다.
+      if (searchedResultArray.length > 0) {
+        randomMusic = getRandomMusicFromResults(searchedResultArray);
+        console.log("결과값 하나 다른 경우 find");
+        console.log("원본\t:" + resultArrayOrigin.join(""));
+        console.log("비교\t:" + resultArray.join(""));
+        req.body.randomMusic = randomMusic;
+        next();
+        return;
+      }
+    }
+
+    // 두개 다를 경우 (81.81%)
+
+    randomIndexArray = getDifferentTwoIndexArray();
+    for (let i = 0; i < randomIndexArray.length; i++) {
+      resultArray = resultArrayOrigin.slice();
+      let indexToFix = randomIndexArray[i]; // [m, n];
+      resultArray[indexToFix[0]] = resultArray[indexToFix[0]] == 0 ? 1 : 0;
+      resultArray[indexToFix[1]] = resultArray[indexToFix[1]] == 0 ? 1 : 0;
+      let resultString = resultArray.join("");
+      searchedResultArray = await Result.find({ result: resultString });
+      if (searchedResultArray.length > 0) {
+        randomMusic = getRandomMusicFromResults(searchedResultArray);
+        req.body.randomMusic = randomMusic;
+        console.log("결과값 두개 다른 경우 find");
+        console.log("원본\t:" + resultArrayOrigin.join(""));
+        console.log("비교\t:" + resultArray.join(""));
+        next();
+        return;
+      }
+    }
+
+    // 세개 다를 경우 (72.72%)
+    randomIndexArray = getDifferentThreeIndexArray();
+    for (let i = 0; i < randomIndexArray.length; i++) {
+      resultArray = resultArrayOrigin.slice();
+      let indexToFix = randomIndexArray[i]; // [m, n, o];
+      resultArray[indexToFix[0]] = resultArray[indexToFix[0]] == 0 ? 1 : 0;
+      resultArray[indexToFix[1]] = resultArray[indexToFix[1]] == 0 ? 1 : 0;
+      resultArray[indexToFix[2]] = resultArray[indexToFix[2]] == 0 ? 1 : 0;
+
+      let resultString = resultArray.join("");
+      searchedResultArray = await Result.find({ result: resultString });
+
+      if (searchedResultArray.length > 0) {
+        randomMusic = getRandomMusicFromResults(searchedResultArray);
+        req.body.randomMusic = randomMusic;
+        console.log("결과값 세개 다른 경우 find");
+        console.log("원본\t:" + resultArrayOrigin.join(""));
+        console.log("비교\t:" + resultArray.join(""));
+        next();
+        return;
+      }
+    }
+
+    //IF NOT?
+    console.log("72% 이상 일치 하는 결과 없음 - Random Music");
+    searchedResultArray = await Result.find({});
+    randomMusic = getRandomMusicFromResults(searchedResultArray);
+    req.body.randomMusic = randomMusic;
+    next();
+    return;
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json(err);
+  }
 };
 
 const getYearMonthDate = () => {
@@ -131,12 +192,51 @@ const getYearMonthDate = () => {
   return today;
 };
 
+const shuffle = array => {
+  var j, x, i;
+  for (i = array.length; i; i -= 1) {
+    j = Math.floor(Math.random() * i);
+    x = array[i - 1];
+    array[i - 1] = array[j];
+    array[j] = x;
+  }
+};
 
-const getRandomArbitrary = (max) => {
-  return Math.floor(Math.random() * max);
-}
+const getRandomMusicFromResults = array => {
+  let length = array.length;
+  let randomIndex = Math.floor(Math.random() * length);
+  return array && array[randomIndex] && array[randomIndex].music;
+};
 
-const getRandomMusic = (docList) => {
-  var randomIndex = getRandomArbitrary(0, docList.length);
-  return docList[randomIndex].music;
-}
+const getDifferentOneIndexArray = () => {
+  let arr = [];
+  for (let i = 0; i < 11; i++) {
+    arr.push(i);
+  }
+  shuffle(arr);
+  return arr;
+};
+
+const getDifferentTwoIndexArray = () => {
+  let arr = [];
+  for (let i = 0; i < 11; i++) {
+    for (let j = i + 1; j < 11; j++) {
+      arr.push([i, j]);
+    }
+  }
+  shuffle(arr);
+  return arr;
+};
+
+const getDifferentThreeIndexArray = () => {
+  let arr = [];
+  for (let i = 0; i < 11; i++) {
+    for (let j = i + 1; j < 11; j++) {
+      for (let k = j + 1; k < 11; k++) {
+        arr.push([i, j, k]);
+      }
+    }
+  }
+  shuffle(arr);
+  return arr;
+};

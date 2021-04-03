@@ -3,16 +3,13 @@ import {
   findRandomMusic,
   saveResult,
   updateVisitorCount,
-  searchMusic
+  searchMusic,
 } from "../controllers/apiController";
 
 const apiRouter = express.Router();
 
-apiRouter.get("/", (req, res) => {
-  res.send("hi");
-});
-apiRouter.get("/updateVisitorCount", updateVisitorCount);
+apiRouter.get("/visit", updateVisitorCount);
 apiRouter.post("/youtube", searchMusic);
-apiRouter.post("/result", saveResult, findRandomMusic);
+apiRouter.post("/result", findRandomMusic, saveResult);
 
 export default apiRouter;
