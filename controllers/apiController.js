@@ -25,7 +25,7 @@ export const updateVisitorCount = async (req, res) => {
 };
 
 export const searchMusic = async (req, res, next) => {
-  var pageToken = req.param('pageToken');
+  var pageToken = req.param("pageToken");
   youtube.addParam("order", "relevance"); // 관련성 순서
   youtube.addParam("type", "video"); // 타입 지정
   youtube.addParam("part", "snippet");
@@ -33,7 +33,7 @@ export const searchMusic = async (req, res, next) => {
   youtube.addParam("safeSearch", "moderate");
   youtube.addParam("pageToken", pageToken);
   var limit = 5;
-  var word = req.param('keyword');
+  var word = req.param("keyword");
 
   console.log("검색어 : " + word);
   console.log("=======================================");
@@ -79,7 +79,10 @@ export const saveResult = (req, res) => {
     }
     console.log(`Submit Success : ${result}`);
   });
-  res.status(200).json({ result, randomMusic });
+  res
+    .set("Access-Control-Allow-Origin", "*")
+    .status(200)
+    .json({ result, randomMusic });
 };
 
 export const findRandomMusic = async (req, res, next) => {
