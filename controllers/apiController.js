@@ -32,7 +32,7 @@ export const searchMusic = async (req, res, next) => {
   youtube.addParam("regionCode", "KR");
   youtube.addParam("safeSearch", "moderate");
   youtube.addParam("pageToken", pageToken);
-  var limit = 5;
+  var limit = 20;
   var word = req.param("keyword");
 
   console.log("검색어 : " + word);
