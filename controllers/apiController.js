@@ -81,8 +81,13 @@ export const saveResult = (req, res) => {
   });
   res
     .set("Access-Control-Allow-Origin", "*")
+    .set("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
+    .set(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, X-PINGOTHER"
+    )
     .status(200)
-    .json({ result, randomMusic });
+    .json(randomMusic);
 };
 
 export const findRandomMusic = async (req, res, next) => {
