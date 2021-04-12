@@ -24,7 +24,7 @@ export const updateVisitorCount = async (req, res) => {
   );
 };
 
-export const searchMusic = async (req, res, next) => {
+export const searchYoutubeMusic = async (req, res, next) => {
   var pageToken = req.param("pageToken");
   youtube.addParam("order", "relevance"); // 관련성 순서
   youtube.addParam("type", "video"); // 타입 지정
@@ -68,6 +68,10 @@ export const searchMusic = async (req, res, next) => {
   });
 };
 
+export const searchMusic = async (req, res, next) => {
+  
+}
+
 export const saveResult = (req, res) => {
   const {
     body: { music, result, randomMusic },
@@ -82,13 +86,20 @@ export const saveResult = (req, res) => {
   res
     .set("Access-Control-Allow-Origin", "*")
     .status(200)
-    .json({ result, randomMusic });
+    .json({ randomMusic });
 };
 
 export const findRandomMusic = async (req, res, next) => {
+  // validate
+  if(!result.match('/^[01]{11}$/')) {
+    console.log('잘못된 result 값 : '+result);
+    return res.status(500).json({message: '잘못된 요청입니다.'});
+  }
+
   const {
     body: { result },
   } = req;
+
   let resultArrayOrigin = result.split("");
   let resultArray;
   let searchedResultArray; // 해당 결과와 동일한 결과를 가진 결과 도큐먼트의 Array
@@ -99,12 +110,13 @@ export const findRandomMusic = async (req, res, next) => {
     searchedResultArray = await Result.find({ result });
     if (searchedResultArray.length > 0) {
       randomMusic = getRandomMusicFromResults(searchedResultArray);
+      console.log("결과값 전체 일치 find");
       req.body.randomMusic = randomMusic;
       next();
       return;
     }
-    // 하나 다를 경우 (90.90%)
 
+    // 하나 다를 경우 (90.90%)
     let randomIndexArray = getDifferentOneIndexArray();
     for (let i = 0; i < randomIndexArray.length; i++) {
       //해당 인덱스 수정
@@ -126,7 +138,6 @@ export const findRandomMusic = async (req, res, next) => {
     }
 
     // 두개 다를 경우 (81.81%)
-
     randomIndexArray = getDifferentTwoIndexArray();
     for (let i = 0; i < randomIndexArray.length; i++) {
       resultArray = resultArrayOrigin.slice();
@@ -171,11 +182,11 @@ export const findRandomMusic = async (req, res, next) => {
 
     //IF NOT?
     console.log("72% 이상 일치 하는 결과 없음 - Random Music");
-    searchedResultArray = await Result.find({});
-    randomMusic = getRandomMusicFromResults(searchedResultArray);
-    req.body.randomMusic = randomMusic;
+    randomMusic = await Result.aggregate([{ $sample:{size:1} }]);
+    req.body.randomMusic = randomMusic.music;
     next();
     return;
+    
   } catch (err) {
     console.log(err);
     return res.status(500).json(err);
