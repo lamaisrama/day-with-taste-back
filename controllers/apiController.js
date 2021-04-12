@@ -89,15 +89,16 @@ export const saveResult = (req, res) => {
 };
 
 export const findRandomMusic = async (req, res, next) => {
+
+  const {
+    body: { result },
+  } = req;
+
   // validate
   if(!result.match('/^[01]{11}$/')) {
     console.log('잘못된 result 값 : '+result);
     return res.status(500).json({message: '잘못된 요청입니다.'});
   }
-
-  const {
-    body: { result },
-  } = req;
 
   let resultArrayOrigin = result.split("");
   let resultArray;
