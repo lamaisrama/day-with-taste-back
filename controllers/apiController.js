@@ -88,9 +88,11 @@ export const searchMusic = async (req, res, next) => {
     console.log(track);
     console.log('===========');
     for(var i in track) {
+      var url = track[i].url;
       var title = track[i].name;
       var artist = track[i].artist;
       var image = [];
+      console.log('url:',url);
       console.log('이름:', title);
       console.log('아티스트:', artist);
       console.log('이미지:',track[i].image[1]);
@@ -100,6 +102,7 @@ export const searchMusic = async (req, res, next) => {
         // console.log('image'+j, img);
       }
       list.push({
+        url: url,
         title: title,
         artist: artist,
         image: image,
