@@ -6,8 +6,6 @@ import db from "./db";
 
 dotenv.config();
 
-app.use(cors());
-
 const PORT = process.env.PORT || 3000;
 const handleListening = () => {
   console.log(`✅ Listening on : https://day-with-taste.herokuapp.com:${PORT}`);

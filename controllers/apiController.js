@@ -84,7 +84,6 @@ export const saveResult = (req, res) => {
     console.log(`Submit Success : ${result}`);
   });
   res
-    .set("Access-Control-Allow-Origin", "*")
     .status(200)
     .json({ randomMusic });
 };
