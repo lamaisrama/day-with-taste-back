@@ -95,7 +95,7 @@ export const findRandomMusic = async (req, res, next) => {
   } = req;
 
   // validate
-  if(!result.match('/^[01]{11}$/')) {
+  if(!result.match(/^[01]{11}$/)) {
     console.log('잘못된 result 값 : '+result);
     return res.status(500).json({message: '잘못된 요청입니다.'});
   }
