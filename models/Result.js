@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 
-const resultSchema = new mongoose.Schema({
+const ResultSchema = new mongoose.Schema({
   music: String,
   result: String,
   regDt: Date,
 });
 
-const model = mongoose.model("Result", resultSchema);
+const model = mongoose.model("Result", ResultSchema);
 export default model;

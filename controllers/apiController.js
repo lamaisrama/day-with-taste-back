@@ -1,5 +1,5 @@
 import Visitor from "../models/Visitor";
-import Result from "../models/Result";
+import Result from "../models/result";
 import Youtube from "youtube-node";
 import dotenv from "dotenv";
 import axios from "axios";
