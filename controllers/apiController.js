@@ -1,5 +1,5 @@
 import Visitor from "../models/Visitor";
-import Result from "../models/result";
+import Result from "../models/Result";
 import Youtube from "youtube-node";
 import dotenv from "dotenv";
 import axios from "axios";
@@ -72,50 +72,50 @@ export const searchYoutubeMusic = async (req, res, next) => {
 export const searchMusic = async (req, res, next) => {
   var word = encodeURI(req.query.keyword);
   var limit = 5;
-  console.log('Last.FM API 검색어 : ',req.query.keyword);
+  console.log("Last.FM API 검색어 : ", req.query.keyword);
   var url = `http://ws.audioscrobbler.com/2.0/?method=track.search\
               &track=${word}\
               &api_key=${process.env.LASTFM_KEY}\
               &limit=${limit}\
-              &format=json`
+              &format=json`;
   await axios({
-    method: 'get',
+    method: "get",
     url: url,
-    responseType: 'json'
-  }).then((musicList) => {
-    const track = musicList.data.results.trackmatches.track;
-    var list = [];
-    console.log(track);
-    console.log('===========');
-    for(var i in track) {
-      var url = track[i].url;
-      var title = track[i].name;
-      var artist = track[i].artist;
-      var image = [];
-      console.log('url:',url);
-      console.log('이름:', title);
-      console.log('아티스트:', artist);
-      console.log('이미지:',track[i].image[1]);
-      for(var j in track[i].image) {
-        var img = track[i].image[j];
-        image.push(img);
-        // console.log('image'+j, img);
-      }
-      list.push({
-        url: url,
-        title: title,
-        artist: artist,
-        image: image,
-      });
-      console.log('--------')
-    }
-    return res.status(200).json(list);
+    responseType: "json",
   })
-  .catch((err) => {
-    return res.status(500).json(err);
-  });
-  
-}
+    .then(musicList => {
+      const track = musicList.data.results.trackmatches.track;
+      var list = [];
+      console.log(track);
+      console.log("===========");
+      for (var i in track) {
+        var url = track[i].url;
+        var title = track[i].name;
+        var artist = track[i].artist;
+        var image = [];
+        console.log("url:", url);
+        console.log("이름:", title);
+        console.log("아티스트:", artist);
+        console.log("이미지:", track[i].image[1]);
+        for (var j in track[i].image) {
+          var img = track[i].image[j];
+          image.push(img);
+          // console.log('image'+j, img);
+        }
+        list.push({
+          url: url,
+          title: title,
+          artist: artist,
+          image: image,
+        });
+        console.log("--------");
+      }
+      return res.status(200).json(list);
+    })
+    .catch(err => {
+      return res.status(500).json(err);
+    });
+};
 
 export const saveResult = (req, res) => {
   const {
@@ -128,21 +128,18 @@ export const saveResult = (req, res) => {
     }
     console.log(`Submit Success : ${result}`);
   });
-  res
-    .status(200)
-    .json({ randomMusic });
+  res.status(200).json({ randomMusic });
 };
 
 export const findRandomMusic = async (req, res, next) => {
-
   const {
     body: { result },
   } = req;
 
   // validate
-  if(!result.match(/^[01]{11}$/)) {
-    console.log('잘못된 result 값 : '+result);
-    return res.status(500).json({message: '잘못된 요청입니다.'});
+  if (!result.match(/^[01]{11}$/)) {
+    console.log("잘못된 result 값 : " + result);
+    return res.status(500).json({ message: "잘못된 요청입니다." });
   }
 
   let resultArrayOrigin = result.split("");
@@ -227,11 +224,10 @@ export const findRandomMusic = async (req, res, next) => {
 
     //IF NOT?
     console.log("72% 이상 일치 하는 결과 없음 - Random Music");
-    randomMusic = await Result.aggregate([{ $sample:{size:1} }]);
+    randomMusic = await Result.aggregate([{ $sample: { size: 1 } }]);
     req.body.randomMusic = randomMusic.music;
     next();
     return;
-    
   } catch (err) {
     console.log(err);
     return res.status(500).json(err);
