@@ -177,6 +177,34 @@ export const addResult = async (req, res) => {
   });
 };
 
+export const getMusic = async (req, res) => {
+  const music = req.params.music;
+  console.log('getMusic :: ', music);
+  await Result.find({ music: music }, (err, data) => {
+    if(err) {
+      return res.status(500).json({
+        success: false,
+        msg: 'DB_ERROR'
+      });
+    }
+    console.log('result : ', data);
+    if( data.length == 0 ) {
+      return res.status(200).json({
+        success: false,
+        msg: 'NO_DATA'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        url: data[0].url,
+        artist: data[0].artist,
+        title: data[0].title
+      }
+    });
+  });
+};
 
 export const findRandomMusic = async (req, res, next) => {
 
