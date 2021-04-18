@@ -86,7 +86,6 @@ export const searchMusic = async (req, res, next) => {
   }).then((musicList) => {
     const track = musicList.data.results.trackmatches.track;
     var list = [];
-    console.log(track);
     console.log('===========');
     for(var i in track) {
       var url = track[i].url;
@@ -112,38 +111,9 @@ export const searchMusic = async (req, res, next) => {
     }
     return res.status(200).json(list);
   })
-    .then(musicList => {
-      const track = musicList.data.results.trackmatches.track;
-      var list = [];
-      console.log(track);
-      console.log("===========");
-      for (var i in track) {
-        var url = track[i].url;
-        var title = track[i].name;
-        var artist = track[i].artist;
-        var image = [];
-        console.log("url:", url);
-        console.log("이름:", title);
-        console.log("아티스트:", artist);
-        console.log("이미지:", track[i].image[1]);
-        for (var j in track[i].image) {
-          var img = track[i].image[j];
-          image.push(img);
-          // console.log('image'+j, img);
-        }
-        list.push({
-          url: url,
-          title: title,
-          artist: artist,
-          image: image,
-        });
-        console.log("--------");
-      }
-      return res.status(200).json(list);
-    })
-    .catch(err => {
-      return res.status(500).json(err);
-    });
+  .catch(err => {
+    return res.status(500).json(err);
+  });
 };
 
 export const saveResult = (req, res) => {
