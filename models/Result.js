@@ -8,7 +8,7 @@ const ResultSchema = new mongoose.Schema({
   url: String,
   artist: String,
   title: String,
-  images: [String]
+  image: String
 });
 
 const model = mongoose.model("Result", ResultSchema);

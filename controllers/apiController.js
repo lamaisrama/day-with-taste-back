@@ -19,9 +19,15 @@ export const updateVisitorCount = async (req, res) => {
     (err, visitor) => {
       if (err) {
         console.log(`Something wrong when updating data : ${err}`);
-        return res.status(500).json(err);
+        return res.status(500).json({
+          success: false,
+          msg: 'DB_ERROR'
+        });
       }
-      return res.status(200).json(visitor);
+      return res.status(200).json({
+        success: true,
+        data: visitor
+      });
     }
   );
 };
@@ -43,7 +49,10 @@ export const searchYoutubeMusic = async (req, res, next) => {
     // 검색 실행
     if (err) {
       console.log(err);
-      return res.status(500).json(err);
+      return res.status(500).json({
+        success: false,
+        msg: 'INTERNAL_SERVER_ERROR'
+      });
     } // 에러일 경우 에러공지하고 빠져나감
     var nextPageToken = result.nextPageToken;
     var prevPageToken = result.prevPageToken;
@@ -66,7 +75,10 @@ export const searchYoutubeMusic = async (req, res, next) => {
       console.log("-----------");
     }
     var info = { item: list, nextPage: nextPageToken, prevPage: prevPageToken };
-    return res.status(200).json(info);
+    return res.status(200).json({
+      success: true,
+      data: info
+    });
   });
 };
 
@@ -91,28 +103,29 @@ export const searchMusic = async (req, res, next) => {
       var url = track[i].url;
       var title = track[i].name;
       var artist = track[i].artist;
-      var image = [];
+      var image = track[i].image[1]['#text'];
       console.log('url:',url);
       console.log('이름:', title);
       console.log('아티스트:', artist);
-      console.log('이미지:',track[i].image[1]['#text']);
-      for(var j in track[i].image) {
-        var img = track[i].image[j];
-        image.push(img['#text']);
-        // console.log('image'+j, img);
-      }
+      console.log('이미지:', image);
       list.push({
         url: url,
         title: title,
         artist: artist,
-        images: image,
+        image: image,
       });
       console.log('--------')
     }
-    return res.status(200).json(list);
+    return res.status(200).json({
+      success: true,
+      data: list
+    });
   })
   .catch(err => {
-    return res.status(500).json(err);
+    return res.status(500).json({
+      success: false,
+      msg: 'INTERNAL_SERVER_ERROR'
+    });
   });
 };
 
@@ -123,17 +136,25 @@ export const saveResult = (req, res) => {
 
   new Result({ music, result }).save((err, result) => {
     if (err) {
-      res.status(500).json(err);
+      res.status(500).json({
+        success: false,
+        msg: 'DB_ERROR'
+      });
     }
     console.log(`Submit Success : ${result}`);
   });
-  res.status(200).json({ randomMusic });
+  res.status(200).json({
+    success: true,
+    data: {
+      randomMusic: randomMusic
+    }
+  });
 };
 
 
 export const addResult = async (req, res) => {
   const {
-    body: { url, artist, title, result, randomMusic }
+    body: { url, artist, title, image, result, randomMusic }
   } = req;
 
   console.log('addResult',randomMusic);
@@ -141,7 +162,6 @@ export const addResult = async (req, res) => {
   var music;
   while(true) {
     music = uniqId.process();
-    console.log('music==>',music);
     const data = await Result.find({ music: music });
     console.log(data);
     if(data.length == 0) break;
@@ -152,14 +172,15 @@ export const addResult = async (req, res) => {
   console.log(`url: ${url}`);
   console.log(`artist: ${artist}`);
   console.log(`title: ${title}`);
+  console.log(`image: ${image}`)
   console.log(`result: ${result}`);
   console.log('=====');
 
-  new Result({ music, url, artist, title, result }).save((err, result) => {
+  new Result({ music, url, artist, title, image, result }).save((err, result) => {
     if(err) {
       return res.status(500).json({
         success: false,
-        msg: err
+        msg: 'DB_ERROR'
       });
     }
     console.log(`Submit Success : ${result}`);
@@ -183,7 +204,7 @@ export const getMusic = async (req, res) => {
         msg: 'DB_ERROR'
       });
     }
-    console.log('result : ', data);
+    console.log(`result(${data.length}개):`, data);
     if( data.length == 0 ) {
       return res.status(200).json({
         success: false,
@@ -196,7 +217,8 @@ export const getMusic = async (req, res) => {
       data: {
         url: data[0].url,
         artist: data[0].artist,
-        title: data[0].title
+        title: data[0].title,
+        image: data[0].image
       }
     });
   });
