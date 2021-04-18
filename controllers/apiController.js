@@ -3,6 +3,7 @@ import Result from "../models/result";
 import Youtube from "youtube-node";
 import dotenv from "dotenv";
 import axios from "axios";
+import uniqId from "uniqid";
 
 dotenv.config();
 
@@ -95,17 +96,17 @@ export const searchMusic = async (req, res, next) => {
       console.log('url:',url);
       console.log('이름:', title);
       console.log('아티스트:', artist);
-      console.log('이미지:',track[i].image[1]);
+      console.log('이미지:',track[i].image[1]['#text']);
       for(var j in track[i].image) {
         var img = track[i].image[j];
-        image.push(img);
+        image.push(img['#text']);
         // console.log('image'+j, img);
       }
       list.push({
         url: url,
         title: title,
         artist: artist,
-        image: image,
+        images: image,
       });
       console.log('--------')
     }
@@ -133,6 +134,50 @@ export const saveResult = (req, res) => {
     .json({ randomMusic });
 };
 
+
+export const addResult = async (req, res) => {
+  const {
+    body: { url, artist, title, result, randomMusic }
+  } = req;
+
+  console.log('addResult',randomMusic);
+  // generate ID
+  var music;
+  while(true) {
+    music = uniqId.process();
+    console.log('music==>',music);
+    const data = await Result.find({ music: music });
+    console.log(data);
+    if(data.length == 0) break;
+  }
+
+  console.log('=====');
+  console.log(`music: ${music}`);
+  console.log(`url: ${url}`);
+  console.log(`artist: ${artist}`);
+  console.log(`title: ${title}`);
+  console.log(`result: ${result}`);
+  console.log('=====');
+
+  new Result({ music, url, artist, title, result }).save((err, result) => {
+    if(err) {
+      return res.status(500).json({
+        success: false,
+        msg: err
+      });
+    }
+    console.log(`Submit Success : ${result}`);
+    
+    return res.status(200).json({
+      success: true,
+      data: {
+        randomMusic: randomMusic
+      }
+    });
+  });
+};
+
+
 export const findRandomMusic = async (req, res, next) => {
 
   const {
@@ -154,8 +199,9 @@ export const findRandomMusic = async (req, res, next) => {
     // 전체 일치 하는 경우
     searchedResultArray = await Result.find({ result });
     if (searchedResultArray.length > 0) {
+      console.log(searchedResultArray);
       randomMusic = getRandomMusicFromResults(searchedResultArray);
-      console.log("결과값 전체 일치 find");
+      console.log("결과값 전체 일치 find", randomMusic);
       req.body.randomMusic = randomMusic;
       next();
       return;
@@ -173,7 +219,7 @@ export const findRandomMusic = async (req, res, next) => {
       // 결과값 찾으면 전송할 데이터의 randomMusic에 해당 값을 넣는다.
       if (searchedResultArray.length > 0) {
         randomMusic = getRandomMusicFromResults(searchedResultArray);
-        console.log("결과값 하나 다른 경우 find");
+        console.log("결과값 하나 다른 경우 find", randomMusic);
         console.log("원본\t:" + resultArrayOrigin.join(""));
         console.log("비교\t:" + resultArray.join(""));
         req.body.randomMusic = randomMusic;
@@ -194,7 +240,7 @@ export const findRandomMusic = async (req, res, next) => {
       if (searchedResultArray.length > 0) {
         randomMusic = getRandomMusicFromResults(searchedResultArray);
         req.body.randomMusic = randomMusic;
-        console.log("결과값 두개 다른 경우 find");
+        console.log("결과값 두개 다른 경우 find", randomMusic);
         console.log("원본\t:" + resultArrayOrigin.join(""));
         console.log("비교\t:" + resultArray.join(""));
         next();
@@ -217,7 +263,7 @@ export const findRandomMusic = async (req, res, next) => {
       if (searchedResultArray.length > 0) {
         randomMusic = getRandomMusicFromResults(searchedResultArray);
         req.body.randomMusic = randomMusic;
-        console.log("결과값 세개 다른 경우 find");
+        console.log("결과값 세개 다른 경우 find", randomMusic);
         console.log("원본\t:" + resultArrayOrigin.join(""));
         console.log("비교\t:" + resultArray.join(""));
         next();
@@ -226,9 +272,9 @@ export const findRandomMusic = async (req, res, next) => {
     }
 
     //IF NOT?
-    console.log("72% 이상 일치 하는 결과 없음 - Random Music");
     randomMusic = await Result.aggregate([{ $sample:{size:1} }]);
     req.body.randomMusic = randomMusic.music;
+    console.log("72% 이상 일치 하는 결과 없음 - Random Music", randomMusic.music);
     next();
     return;
     
@@ -237,6 +283,17 @@ export const findRandomMusic = async (req, res, next) => {
     return res.status(500).json(err);
   }
 };
+
+export const deleteData = async (req, res) => {
+  const arr = req.query.data;``
+  await Result.deleteMany({ _id: {$in: arr} }, (err, response) => {
+    if(err) return res.status(500).json({
+      success: false,
+      msg: 'DB ERROR'
+    });
+    return res.status(200).json({success: true});
+  });
+}
 
 const getYearMonthDate = () => {
   let today = new Date();
@@ -264,6 +321,7 @@ const shuffle = array => {
 const getRandomMusicFromResults = array => {
   let length = array.length;
   let randomIndex = Math.floor(Math.random() * length);
+  console.log('randomIndex',randomIndex);
   return array && array[randomIndex] && array[randomIndex].music;
 };
 
