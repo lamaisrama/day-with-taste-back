@@ -7,7 +7,8 @@ import {
   searchMusic,
   addResult,
   getMusic,
-  deleteData
+  deleteData,
+  getData
 } from "../controllers/apiController";
 
 const apiRouter = express.Router();
@@ -19,9 +20,10 @@ apiRouter.post("/result", findRandomMusic, saveResult);
 /* Last.FM API 이용 */
 apiRouter.get("/search", searchMusic);
 apiRouter.post("/submit", findRandomMusic, addResult);
-apiRouter.get("/music/:music", getMusic);
+apiRouter.get("/music", getMusic);
 
-/* TEST DATA 지우는 용도 */
+/* TEST 용도 */
 apiRouter.post("/delete", deleteData);
+apiRouter.get("/data", getData);
 
 export default apiRouter;

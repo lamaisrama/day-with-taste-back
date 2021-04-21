@@ -156,6 +156,14 @@ export const addResult = async (req, res) => {
   const {
     body: { url, artist, title, image, result, randomMusic }
   } = req;
+  
+  if(!url || !result) {
+    console.log(url, result);
+    return res.status(400).json({
+      success: false,
+      msg: "BAD_REQUEST"
+    });
+  }
 
   console.log('addResult',randomMusic);
   // generate ID
@@ -195,7 +203,7 @@ export const addResult = async (req, res) => {
 };
 
 export const getMusic = async (req, res) => {
-  const music = req.params.music;
+  const music = req.query.id;
   console.log('getMusic :: ', music);
   await Result.find({ music: music }, (err, data) => {
     if(err) {
@@ -223,6 +231,22 @@ export const getMusic = async (req, res) => {
     });
   });
 };
+
+export const getData = async(req, res) => {
+  await Result.find({}, (err, data) => {
+    if(err) {
+      return res.status(500).json({
+        success: false,
+        msg: 'DB_ERROR'
+      });
+    }
+    console.log(`result(${data.length}개)`);
+    return res.status(200).json({
+      success: true,
+      data: data
+    });
+  })
+}
 
 export const findRandomMusic = async (req, res, next) => {
   const {
@@ -293,6 +317,7 @@ export const findRandomMusic = async (req, res, next) => {
       }
     }
 
+    
     // 세개 다를 경우 (72.72%)
     randomIndexArray = getDifferentThreeIndexArray();
     for (let i = 0; i < randomIndexArray.length; i++) {
@@ -315,25 +340,31 @@ export const findRandomMusic = async (req, res, next) => {
         return;
       }
     }
-
+    
     //IF NOT?
-    randomMusic = await Result.aggregate([{ $sample:{size:1} }]);
-    req.body.randomMusic = randomMusic.music;
-    console.log("72% 이상 일치 하는 결과 없음 - Random Music", randomMusic.music);
+    randomMusic = await Result.aggregate([{ $sample: { size:1 } }]);
+    if( randomMusic.length == 0 ) {
+      throw new Error();
+    }
+    req.body.randomMusic = randomMusic[0].music;
+    console.log("72% 이상 일치 하는 결과 없음 - Random Music", randomMusic[0].music);
     next();
     return;
   } catch (err) {
     console.log(err);
-    return res.status(500).json(err);
+    return res.status(500).json({
+      success: false,
+      msg: "INTERNAL_SERVER_ERROR"
+    });
   }
 };
 
 export const deleteData = async (req, res) => {
-  const arr = req.query.data;``
+  const arr = req.query.data;
   await Result.deleteMany({ _id: {$in: arr} }, (err, response) => {
     if(err) return res.status(500).json({
       success: false,
-      msg: 'DB ERROR'
+      msg: 'DB_ERROR'
     });
     return res.status(200).json({success: true});
   });
