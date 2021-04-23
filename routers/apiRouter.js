@@ -1,27 +1,30 @@
 import express from "express";
 import {
-  findRandomMusic,
-  saveResult,
   updateVisitorCount,
-  searchYoutubeMusic,
+  findRandomMusic,
   searchMusic,
   addResult,
   getMusic,
+} from "../controllers/apiController";
+import {
+  searchYoutubeMusic,
+  saveResult,
   deleteData,
   getData
-} from "../controllers/apiController";
+} from "../controllers/testController";
 
 const apiRouter = express.Router();
 
 apiRouter.get("/visit", updateVisitorCount);
-apiRouter.get("/youtube", searchYoutubeMusic);
-apiRouter.post("/result", findRandomMusic, saveResult);
 
 /* Last.FM API 이용 */
 apiRouter.get("/search", searchMusic);
 apiRouter.post("/submit", findRandomMusic, addResult);
 apiRouter.get("/music", getMusic);
 
+/* Youtube API 이용(deprecated) */
+apiRouter.get("/youtube", searchYoutubeMusic);
+apiRouter.post("/result", findRandomMusic, saveResult);
 /* TEST 용도 */
 apiRouter.post("/delete", deleteData);
 apiRouter.get("/data", getData);
