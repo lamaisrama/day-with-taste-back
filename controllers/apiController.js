@@ -31,12 +31,11 @@ export const updateVisitorCount = async (req, res) => {
 
 export const searchMusic = async (req, res, next) => {
   var word = encodeURI(req.query.keyword);
-  var limit = 5;
   console.log("Last.FM API 검색어 : ", req.query.keyword);
   var url = `http://ws.audioscrobbler.com/2.0/?method=track.search\
               &track=${word}\
               &api_key=${process.env.LASTFM_KEY}\
-              &limit=${limit}\
+              &limit=${process.env.SEARCH_LIMIT}\
               &format=json`;
   await axios({
     method: "get",
@@ -51,15 +50,17 @@ export const searchMusic = async (req, res, next) => {
       var title = track[i].name;
       var artist = track[i].artist;
       var image = track[i].image[1]['#text'];
+     
       console.log('url:',url);
       console.log('이름:', title);
       console.log('아티스트:', artist);
       console.log('이미지:', image);
+
       list.push({
         url: url,
         title: title,
         artist: artist,
-        image: image,
+        image: image
       });
       console.log('--------')
     }
