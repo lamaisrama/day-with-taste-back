@@ -10,7 +10,8 @@ import {
   searchYoutubeMusic,
   saveResult,
   deleteData,
-  getData
+  getData,
+  searchVideo
 } from "../controllers/testController";
 
 const apiRouter = express.Router();
@@ -28,5 +29,6 @@ apiRouter.post("/result", findRandomMusic, saveResult);
 /* TEST 용도 */
 apiRouter.post("/delete", deleteData);
 apiRouter.get("/data", getData);
+apiRouter.get("/test", searchVideo);
 
 export default apiRouter;

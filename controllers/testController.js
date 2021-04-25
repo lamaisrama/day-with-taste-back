@@ -1,5 +1,6 @@
 import Result from "../models/Result";
 import Youtube from "youtube-node";
+import axios from "axios";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -104,4 +105,41 @@ export const searchYoutubeMusic = async (req, res, next) => {
         data: data
       });
     })
+  }
+
+  export const searchVideo = async(req, res) => {
+    var url = 'https://dapi.kakao.com/v2/search/vclip';
+    var query = encodeURI(req.query.keyword);
+    var headers = { Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}` }
+    var size = `${process.env.SEARCH_LIMIT}`;
+    console.log(`검색어 : ${req.query.keyword}`);
+    await axios({
+      method: "get",
+      url: url+`?query=${query}&size=${size}`,
+      responseType: 'json',
+      headers: headers
+    }).then((response) => {
+      const docs = response.data.documents;
+      var list = [];
+      for(var i in docs) {
+        var obj = {};
+        obj.image = docs[i].thumbnail;
+        obj.title = docs[i].title;
+        obj.url = docs[i].url;
+        obj.id = docs[i].url.split('?')[1].split('=')[1];
+        list.push(obj);
+      }
+      console.log(list);
+      return res.status(200).json({
+        success: true,
+        data: list
+      });
+    })
+    .catch(err => {
+      console.log(err);
+      return res.status(500).json({
+        success: false,
+        msg: 'INTERNAL_SERVER_ERROR'
+      });
+    });
   }
