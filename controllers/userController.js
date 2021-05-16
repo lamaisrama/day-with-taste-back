@@ -29,10 +29,10 @@ export const updateVisitorCount = async (req, res) => {
 
 export const saveResult = (req, res) => {
   const {
-    body: { music, result, randomMusic },
+    body: { music, image, title, result, randomMusic },
   } = req;
 
-  new Result({ music, result }).save((err, result) => {
+  new Result({ music, image, title, result }).save((err, result) => {
     if (err) {
       res.status(500).json({
         success: false,
@@ -40,11 +40,15 @@ export const saveResult = (req, res) => {
       });
     }
     console.log(`Submit Success : ${result}`);
+
   });
+
   res.status(200).json({
     success: true,
     data: {
-      randomMusic: randomMusic
+      randomMusic: randomMusic.music,
+      image: randomMusic.image,
+      title: randomMusic.title
     }
   });
 };

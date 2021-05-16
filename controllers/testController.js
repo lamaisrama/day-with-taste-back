@@ -4,14 +4,16 @@ import dotenv from "dotenv";
 dotenv.config();
 
 
-export const deleteData = async (req, res) => {
-  const arr = req.query.data;
-  await Result.deleteMany({ _id: {$in: arr} }, (err, response) => {
+export const deleteData = async (req, res, next) => {
+  const arr = req.body.data;
+  console.log(arr);
+  await Result.deleteMany({}, (err, response) => {
     if(err) return res.status(500).json({
       success: false,
       msg: 'DB_ERROR'
     });
-    return res.status(200).json({success: true});
+    next();
+    return;
   });
 }
   

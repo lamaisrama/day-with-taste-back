@@ -20,14 +20,14 @@ const apiRouter = express.Router();
 
 apiRouter.get("/visit", updateVisitorCount);
 apiRouter.post("/result", findRandomMusic, saveResult);
-apiRouter.post("/submit", findRandomMusic, addResult);
+apiRouter.post("/submit", findRandomMusic, addResult); // not used
 
 apiRouter.get("/search", searchDaumMusic);
-apiRouter.get("/lastfm", searchLastFMMusic);
-apiRouter.get("/youtube", searchYoutubeMusic);
-apiRouter.get("/music", getMusic);
+apiRouter.get("/lastfm", searchLastFMMusic); // not used
+apiRouter.get("/youtube", searchYoutubeMusic); // not used
+apiRouter.get("/music", getMusic); // not used
 
-apiRouter.post("/delete", deleteData);
 apiRouter.get("/data", getData);
+apiRouter.post("/initialize", deleteData, saveResult);
 
 export default apiRouter;

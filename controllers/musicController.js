@@ -280,10 +280,13 @@ export const findRandomMusic = async (req, res, next) => {
       //IF NOT?
       randomMusic = await Result.aggregate([{ $sample: { size:1 } }]);
       if( randomMusic.length == 0 ) {
-        throw new Error();
+        req.body.randomMusic = req.body;
+        next();
+        return;
+        // throw new Error();
       }
-      req.body.randomMusic = randomMusic[0].music;
-      console.log("72% 이상 일치 하는 결과 없음 - Random Music", randomMusic[0].music);
+      req.body.randomMusic = randomMusic[0];
+      console.log("72% 이상 일치 하는 결과 없음 - Random Music", randomMusic[0]);
       next();
       return;
     } catch (err) {
@@ -309,7 +312,7 @@ const getRandomMusicFromResults = array => {
     let length = array.length;
     let randomIndex = Math.floor(Math.random() * length);
     console.log('randomIndex',randomIndex);
-    return array && array[randomIndex] && array[randomIndex].music;
+    return array && array[randomIndex];
 };
   
 const getDifferentOneIndexArray = () => {
