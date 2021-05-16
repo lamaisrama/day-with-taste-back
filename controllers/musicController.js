@@ -158,7 +158,7 @@ export const searchDaumMusic = async(req, res) => {
         obj.image = docs[i].thumbnail;
         obj.title = docs[i].title;
         obj.url = docs[i].url;
-        obj.id = docs[i].url.split('?v=')[1];
+        obj.music = docs[i].url.split('?v=')[1];
         list.push(obj);
       }
       console.log(list);
