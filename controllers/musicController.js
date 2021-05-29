@@ -10,7 +10,7 @@ youtube.setKey(process.env.YOUTUBE_KEY);
 
 
 export const getMusic = async (req, res) => {
-    const music = req.query.id;
+    const music = req.query.music;
     console.log('getMusic :: ', music);
     await Result.find({ music: music }, (err, data) => {
       if(err) {
@@ -31,7 +31,6 @@ export const getMusic = async (req, res) => {
         success: true,
         data: {
           url: data[0].url,
-          artist: data[0].artist,
           title: data[0].title,
           image: data[0].image
         }
