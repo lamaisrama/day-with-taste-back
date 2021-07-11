@@ -158,11 +158,14 @@ export const searchDaumMusic = async(req, res) => {
       var list = [];
       for(var i in docs) {
         var obj = {};
+        var music = docs[i].url.split('?v=')[1];
+        if( music == '' || music == null ) { continue; }
         obj.image = docs[i].thumbnail;
         obj.title = docs[i].title;
         obj.url = docs[i].url;
-        obj.music = docs[i].url.split('?v=')[1];
+        obj.music = music;
         list.push(obj);
+        
       }
       console.log(list);
       return res.status(200).json({
