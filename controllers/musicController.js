@@ -167,7 +167,7 @@ export const searchDaumMusic = async(req, res) => {
         list.push(obj);
         
       }
-      console.log(list);
+      // console.log(list);
       return res.status(200).json({
         success: true,
         data: list

@@ -23,9 +23,9 @@ apiRouter.post("/result", findRandomMusic, saveResult);
 // apiRouter.post("/submit", findRandomMusic, addResult); // not used
 
 apiRouter.get("/search", searchDaumMusic);
+apiRouter.get("/music", getMusic);
 // apiRouter.get("/lastfm", searchLastFMMusic); // not used
 // apiRouter.get("/youtube", searchYoutubeMusic); // not used
-// apiRouter.get("/music", getMusic); // not used
 
 apiRouter.get("/data", getData);
 // apiRouter.post("/delete", deleteData);
